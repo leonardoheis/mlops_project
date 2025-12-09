@@ -5,34 +5,37 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    command: uvicorn src.interface.api.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     volumes:
       - ../src:/app/src
-      - ../mlruns:/app/mlruns
-      - ../models:/app/models
       - ../monitoring_reports:/app/monitoring_reports
       - ../data:/app/data
     environment:
       - MLFLOW_TRACKING_URI=file:/app/mlruns
+      - RELOAD=true
+      - RUN_API=true
+      - RUN_STREAMLIT=false
 
   streamlit:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    command: streamlit run src/interface/streamlit/app.py
     ports:
       - "8501:8501"
     volumes:
       - ../src:/app/src
     environment:
-      - API_URL=http://api:8000
+      - API_URL=http://api:8000 (API_URL=http://api:8000)
+      - RUN_API=false
+      - RUN_STREAMLIT=true
 
   mlflow-ui:
-    image: ghcr.io/mlflow/mlflow:v2.10.0
+    image: ghcr.io/mlflow/mlflow:v3.7.0
     command: mlflow ui --backend-store-uri file:/mlruns --host 0.0.0.0 --port 5000
     ports:
       - "5000:5000"
     volumes:
       - ../mlruns:/mlruns
+      - ../mlruns:/app/mlruns
+      - ../models:/app/models      
